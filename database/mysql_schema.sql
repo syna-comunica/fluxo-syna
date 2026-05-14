@@ -118,7 +118,49 @@ CREATE TABLE budgets (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- 8. TRIGGERS
+-- 8. TABELA: clients
+-- ============================================
+CREATE TABLE clients (
+  id CHAR(36) PRIMARY KEY,
+  user_id CHAR(36) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  monthly_value DECIMAL(14, 2) NOT NULL DEFAULT 0,
+  contract_start DATE,
+  last_invoice_date DATE,
+  status ENUM('active', 'inactive', 'churned') NOT NULL DEFAULT 'active',
+  segment VARCHAR(100),
+  ltv_manual DECIMAL(14, 2),
+  notes TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_user_status (user_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 9. TABELA: recurrences
+-- ============================================
+CREATE TABLE recurrences (
+  id CHAR(36) PRIMARY KEY,
+  user_id CHAR(36) NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  value DECIMAL(14, 2) NOT NULL DEFAULT 0,
+  due_day TINYINT NOT NULL DEFAULT 1 COMMENT 'Dia do vencimento (1-31)',
+  type ENUM('income', 'expense') NOT NULL,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  category_id CHAR(36),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+  INDEX idx_user_status (user_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- 10. TRIGGERS
 -- ============================================
 
 -- Trigger para atualizar updated_at em transactions

@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTransactions, fetchBudgets, fetchCategories } from "@/lib/finance-queries";
+import { fetchTransactions, fetchBudgets, fetchCategories, fetchClients, fetchRecurrences } from "@/lib/finance-queries";
 import { formatBRL, formatDate, monthStart, monthLabel } from "@/lib/format";
 import { useMemo } from "react";
 
@@ -13,10 +13,14 @@ function Dashboard() {
   const txQ = useQuery({ queryKey: ["transactions"], queryFn: fetchTransactions });
   const catQ = useQuery({ queryKey: ["categories"], queryFn: fetchCategories });
   const budQ = useQuery({ queryKey: ["budgets", month], queryFn: () => fetchBudgets(month) });
+  const clientQ = useQuery({ queryKey: ["clients"], queryFn: fetchClients });
+  const recQ = useQuery({ queryKey: ["recurrences"], queryFn: fetchRecurrences });
 
   const transactions = txQ.data ?? [];
   const categories = catQ.data ?? [];
   const budgets = budQ.data ?? [];
+  const clients = clientQ.data ?? [];
+  const recurrences = recQ.data ?? [];
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -308,6 +312,8 @@ function Dashboard() {
           )}
         </Card>
 
+        <AlertsCard clients={clients} recurrences={recurrences} />
+
         <Card className="col-span-12">
           <div className="flex justify-between items-center mb-6">
             <Label>Próximos vencimentos</Label>
@@ -385,6 +391,72 @@ function Empty({ msg }: { msg: string }) {
     <div className="py-8 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
       {msg}
     </div>
+  );
+}
+
+function AlertsCard({ clients, recurrences }: { clients: import("@/lib/finance-queries").Client[]; recurrences: import("@/lib/finance-queries").Recurrence[] }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const overdueClients = clients.filter(
+    (c) => c.status === "active" && c.last_invoice_date && c.last_invoice_date < today
+  );
+  const activeRec = recurrences.filter((r) => r.status === "active");
+  const recIncome = activeRec.filter((r) => r.type === "income").reduce((s, r) => s + r.value, 0);
+  const recExpense = activeRec.filter((r) => r.type === "expense").reduce((s, r) => s + r.value, 0);
+
+  const hasAlerts = overdueClients.length > 0;
+  if (!hasAlerts && activeRec.length === 0) return null;
+
+  return (
+    <section className="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {hasAlerts && (
+        <div className="bg-surface ring-1 ring-negative/30 p-6 animate-reveal">
+          <div className="flex items-start gap-3">
+            <div className="size-2 bg-negative mt-1.5 shrink-0" />
+            <div className="flex-1">
+              <Label>Alertas de faturamento</Label>
+              <p className="mt-2 text-sm font-medium">
+                {overdueClients.length} {overdueClients.length === 1 ? "cliente com fatura vencida" : "clientes com faturas vencidas"}
+              </p>
+              <ul className="mt-2 space-y-1">
+                {overdueClients.slice(0, 4).map((c) => (
+                  <li key={c.id} className="text-xs text-muted-foreground font-mono flex justify-between">
+                    <span>{c.name}</span>
+                    <span className="text-negative">{c.last_invoice_date ? formatDate(c.last_invoice_date) : "—"}</span>
+                  </li>
+                ))}
+                {overdueClients.length > 4 && (
+                  <li className="text-xs text-muted-foreground font-mono">+ {overdueClients.length - 4} mais</li>
+                )}
+              </ul>
+              <Link to="/clients" className="mt-3 inline-block text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition">
+                Ver clientes →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeRec.length > 0 && (
+        <div className="bg-surface ring-1 ring-black/5 p-6 animate-reveal">
+          <Label>Recorrências ativas</Label>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Receita fixa</span>
+              <div className="text-positive font-mono font-medium tabular-nums text-sm mt-1">+ {formatBRL(recIncome)}</div>
+            </div>
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Despesa fixa</span>
+              <div className="text-negative font-mono font-medium tabular-nums text-sm mt-1">- {formatBRL(recExpense)}</div>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border flex justify-between items-center">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{activeRec.length} recorrências</span>
+            <Link to="/recurrences" className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition">
+              Gerenciar →
+            </Link>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

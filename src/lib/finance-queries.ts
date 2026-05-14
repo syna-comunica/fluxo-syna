@@ -130,6 +130,144 @@ export async function deleteCategory(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export type Client = {
+  id: string;
+  name: string;
+  monthly_value: number;
+  contract_start: string | null;
+  last_invoice_date: string | null;
+  status: "active" | "inactive" | "churned";
+  segment: string | null;
+  ltv_manual: number | null;
+  notes: string | null;
+};
+
+export type Recurrence = {
+  id: string;
+  name: string;
+  description: string | null;
+  value: number;
+  due_day: number;
+  type: "income" | "expense";
+  status: "active" | "inactive";
+  category_id: string | null;
+};
+
+export async function fetchClients(): Promise<Client[]> {
+  if (hasFinanceApi()) {
+    return financeApiGet<Client[]>("/api/clients");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).from("clients").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []).map((c: any) => ({
+    ...c,
+    monthly_value: Number(c.monthly_value),
+    ltv_manual: c.ltv_manual !== null ? Number(c.ltv_manual) : null,
+  })) as Client[];
+}
+
+export async function insertClient(row: {
+  user_id: string;
+  name: string;
+  monthly_value: number;
+  contract_start: string | null;
+  last_invoice_date: string | null;
+  status: "active" | "inactive" | "churned";
+  segment: string | null;
+  ltv_manual: number | null;
+  notes: string | null;
+}): Promise<void> {
+  if (hasFinanceApi()) {
+    const { user_id: _uid, ...rest } = row;
+    await financeApiSend<unknown>("/api/clients", { method: "POST", body: JSON.stringify(rest) });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("clients").insert(row);
+  if (error) throw error;
+}
+
+export async function updateClient(id: string, patch: Partial<Omit<Client, "id">>): Promise<void> {
+  if (hasFinanceApi()) {
+    await financeApiSend<unknown>(`/api/clients/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("clients").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteClient(id: string): Promise<void> {
+  if (hasFinanceApi()) {
+    await financeApiSend<unknown>(`/api/clients/${id}`, { method: "DELETE" });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("clients").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchRecurrences(): Promise<Recurrence[]> {
+  if (hasFinanceApi()) {
+    return financeApiGet<Recurrence[]>("/api/recurrences");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).from("recurrences").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []).map((r: any) => ({ ...r, value: Number(r.value) })) as Recurrence[];
+}
+
+export async function insertRecurrence(row: {
+  user_id: string;
+  name: string;
+  description: string | null;
+  value: number;
+  due_day: number;
+  type: "income" | "expense";
+  status: "active" | "inactive";
+  category_id: string | null;
+}): Promise<void> {
+  if (hasFinanceApi()) {
+    const { user_id: _uid, ...rest } = row;
+    await financeApiSend<unknown>("/api/recurrences", { method: "POST", body: JSON.stringify(rest) });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("recurrences").insert(row);
+  if (error) throw error;
+}
+
+export async function updateRecurrence(id: string, patch: Partial<Omit<Recurrence, "id">>): Promise<void> {
+  if (hasFinanceApi()) {
+    await financeApiSend<unknown>(`/api/recurrences/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("recurrences").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteRecurrence(id: string): Promise<void> {
+  if (hasFinanceApi()) {
+    await financeApiSend<unknown>(`/api/recurrences/${id}`, { method: "DELETE" });
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any).from("recurrences").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function generateFromRecurrence(id: string, month: string): Promise<Transaction> {
+  if (hasFinanceApi()) {
+    return financeApiSend<Transaction>(`/api/recurrences/${id}/generate`, {
+      method: "POST",
+      body: JSON.stringify({ month }),
+    });
+  }
+  throw new Error("Disponível apenas com Finance API");
+}
+
 export async function upsertBudget(row: {
   user_id: string;
   category_id: string;

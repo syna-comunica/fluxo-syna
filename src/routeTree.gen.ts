@@ -13,6 +13,10 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
+import { Route as AuthenticatedProjectionRouteImport } from './routes/_authenticated/projection'
+import { Route as AuthenticatedRecurrencesRouteImport } from './routes/_authenticated/recurrences'
+import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated/dre'
+import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated/budgets'
@@ -37,6 +41,26 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProjectionRoute = AuthenticatedProjectionRouteImport.update({
+  id: '/projection',
+  path: '/projection',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRecurrencesRoute = AuthenticatedRecurrencesRouteImport.update({
+  id: '/recurrences',
+  path: '/recurrences',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
+  id: '/dre',
+  path: '/dre',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -58,7 +82,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dre': typeof AuthenticatedDreRoute
+  '/projection': typeof AuthenticatedProjectionRoute
+  '/recurrences': typeof AuthenticatedRecurrencesRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesByTo {
@@ -66,7 +94,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/budgets': typeof AuthenticatedBudgetsRoute
   '/categories': typeof AuthenticatedCategoriesRoute
+  '/clients': typeof AuthenticatedClientsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dre': typeof AuthenticatedDreRoute
+  '/projection': typeof AuthenticatedProjectionRoute
+  '/recurrences': typeof AuthenticatedRecurrencesRoute
   '/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRoutesById {
@@ -76,7 +108,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/categories': typeof AuthenticatedCategoriesRoute
+  '/_authenticated/clients': typeof AuthenticatedClientsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dre': typeof AuthenticatedDreRoute
+  '/_authenticated/projection': typeof AuthenticatedProjectionRoute
+  '/_authenticated/recurrences': typeof AuthenticatedRecurrencesRoute
   '/_authenticated/transactions': typeof AuthenticatedTransactionsRoute
 }
 export interface FileRouteTypes {
@@ -86,7 +122,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/budgets'
     | '/categories'
+    | '/clients'
     | '/dashboard'
+    | '/dre'
+    | '/projection'
+    | '/recurrences'
     | '/transactions'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -94,7 +134,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/budgets'
     | '/categories'
+    | '/clients'
     | '/dashboard'
+    | '/dre'
+    | '/projection'
+    | '/recurrences'
     | '/transactions'
   id:
     | '__root__'
@@ -103,7 +147,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/budgets'
     | '/_authenticated/categories'
+    | '/_authenticated/clients'
     | '/_authenticated/dashboard'
+    | '/_authenticated/dre'
+    | '/_authenticated/projection'
+    | '/_authenticated/recurrences'
     | '/_authenticated/transactions'
   fileRoutesById: FileRoutesById
 }
@@ -143,6 +191,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/projection': {
+      id: '/_authenticated/projection'
+      path: '/projection'
+      fullPath: '/projection'
+      preLoaderRoute: typeof AuthenticatedProjectionRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recurrences': {
+      id: '/_authenticated/recurrences'
+      path: '/recurrences'
+      fullPath: '/recurrences'
+      preLoaderRoute: typeof AuthenticatedRecurrencesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dre': {
+      id: '/_authenticated/dre'
+      path: '/dre'
+      fullPath: '/dre'
+      preLoaderRoute: typeof AuthenticatedDreRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clients': {
+      id: '/_authenticated/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedClientsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -170,14 +246,22 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCategoriesRoute: typeof AuthenticatedCategoriesRoute
+  AuthenticatedClientsRoute: typeof AuthenticatedClientsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDreRoute: typeof AuthenticatedDreRoute
+  AuthenticatedProjectionRoute: typeof AuthenticatedProjectionRoute
+  AuthenticatedRecurrencesRoute: typeof AuthenticatedRecurrencesRoute
   AuthenticatedTransactionsRoute: typeof AuthenticatedTransactionsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCategoriesRoute: AuthenticatedCategoriesRoute,
+  AuthenticatedClientsRoute: AuthenticatedClientsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDreRoute: AuthenticatedDreRoute,
+  AuthenticatedProjectionRoute: AuthenticatedProjectionRoute,
+  AuthenticatedRecurrencesRoute: AuthenticatedRecurrencesRoute,
   AuthenticatedTransactionsRoute: AuthenticatedTransactionsRoute,
 }
 

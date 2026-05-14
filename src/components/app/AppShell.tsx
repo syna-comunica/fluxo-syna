@@ -9,6 +9,10 @@ const NAV = [
   { to: "/transactions", label: "Lançamentos" },
   { to: "/budgets", label: "Orçamento" },
   { to: "/categories", label: "Categorias" },
+  { to: "/clients", label: "Clientes" },
+  { to: "/recurrences", label: "Recorrências" },
+  { to: "/dre", label: "DRE" },
+  { to: "/projection", label: "Projeção" },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

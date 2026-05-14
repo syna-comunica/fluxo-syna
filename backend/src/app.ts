@@ -365,6 +365,192 @@ api.post("/budgets", async (c) => {
   }
 });
 
+// ─── Clients ───────────────────────────────────────────────────────────────
+
+const clientInsert = z.object({
+  name: z.string().min(1),
+  monthly_value: z.number().nonnegative().optional(),
+  contract_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  last_invoice_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  status: z.enum(["active", "inactive", "churned"]).optional(),
+  segment: z.string().nullable().optional(),
+  ltv_manual: z.number().nonnegative().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+api.get("/clients", async (c) => {
+  const userId = c.get("userId");
+  try {
+    const [data] = await query<any>(
+      `SELECT id, name, monthly_value, contract_start, last_invoice_date, status, segment, ltv_manual, notes, created_at, updated_at
+       FROM clients WHERE user_id = ? ORDER BY name`,
+      [userId]
+    );
+    return c.json(
+      (data ?? []).map((cl: any) => ({
+        ...cl,
+        monthly_value: Number(cl.monthly_value),
+        ltv_manual: cl.ltv_manual !== null ? Number(cl.ltv_manual) : null,
+      }))
+    );
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.post("/clients", async (c) => {
+  const parsed = clientInsert.safeParse(await c.req.json());
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const userId = c.get("userId");
+  const d = parsed.data;
+  try {
+    const newId = randomUUID();
+    await execute(
+      `INSERT INTO clients (id, user_id, name, monthly_value, contract_start, last_invoice_date, status, segment, ltv_manual, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newId, userId, d.name, d.monthly_value ?? 0, d.contract_start ?? null, d.last_invoice_date ?? null,
+       d.status ?? "active", d.segment ?? null, d.ltv_manual ?? null, d.notes ?? null]
+    );
+    const data = await queryOne<any>(`SELECT id, name, monthly_value, contract_start, last_invoice_date, status, segment, ltv_manual, notes, created_at, updated_at FROM clients WHERE id = ?`, [newId]);
+    return c.json(data ? { ...data, monthly_value: Number(data.monthly_value), ltv_manual: data.ltv_manual !== null ? Number(data.ltv_manual) : null } : null, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.patch("/clients/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  const parsed = clientInsert.partial().safeParse(await c.req.json());
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const patch = parsed.data as Record<string, unknown>;
+  if (Object.keys(patch).length === 0) return c.json({ error: "empty patch" }, 400);
+  const setClauses = Object.keys(patch).map((k) => `${k} = ?`).join(", ");
+  const values = Object.values(patch);
+  try {
+    await execute(`UPDATE clients SET ${setClauses} WHERE id = ? AND user_id = ?`, [...values, id, userId]);
+    const data = await queryOne<any>(`SELECT id, name, monthly_value, contract_start, last_invoice_date, status, segment, ltv_manual, notes, created_at, updated_at FROM clients WHERE id = ?`, [id]);
+    return c.json(data ? { ...data, monthly_value: Number(data.monthly_value), ltv_manual: data.ltv_manual !== null ? Number(data.ltv_manual) : null } : null);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.delete("/clients/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  try {
+    await execute(`DELETE FROM clients WHERE id = ? AND user_id = ?`, [id, userId]);
+    return c.body(null, 204);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+// ─── Recurrences ────────────────────────────────────────────────────────────
+
+const recurrenceInsert = z.object({
+  name: z.string().min(1),
+  description: z.string().nullable().optional(),
+  value: z.number().nonnegative(),
+  due_day: z.number().int().min(1).max(31),
+  type: z.enum(["income", "expense"]),
+  status: z.enum(["active", "inactive"]).optional(),
+  category_id: z
+    .union([z.string().uuid(), z.literal(""), z.null()])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? null : v)),
+});
+
+api.get("/recurrences", async (c) => {
+  const userId = c.get("userId");
+  try {
+    const [data] = await query<any>(
+      `SELECT id, name, description, value, due_day, type, status, category_id, created_at, updated_at
+       FROM recurrences WHERE user_id = ? ORDER BY name`,
+      [userId]
+    );
+    return c.json((data ?? []).map((r: any) => ({ ...r, value: Number(r.value) })));
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.post("/recurrences", async (c) => {
+  const parsed = recurrenceInsert.safeParse(await c.req.json());
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const userId = c.get("userId");
+  const d = parsed.data;
+  try {
+    const newId = randomUUID();
+    await execute(
+      `INSERT INTO recurrences (id, user_id, name, description, value, due_day, type, status, category_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newId, userId, d.name, d.description ?? null, d.value, d.due_day, d.type, d.status ?? "active", d.category_id ?? null]
+    );
+    const data = await queryOne<any>(`SELECT id, name, description, value, due_day, type, status, category_id, created_at, updated_at FROM recurrences WHERE id = ?`, [newId]);
+    return c.json(data ? { ...data, value: Number(data.value) } : null, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.patch("/recurrences/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  const parsed = recurrenceInsert.partial().safeParse(await c.req.json());
+  if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
+  const patch = parsed.data as Record<string, unknown>;
+  if (Object.keys(patch).length === 0) return c.json({ error: "empty patch" }, 400);
+  const setClauses = Object.keys(patch).map((k) => `${k} = ?`).join(", ");
+  const values = Object.values(patch);
+  try {
+    await execute(`UPDATE recurrences SET ${setClauses} WHERE id = ? AND user_id = ?`, [...values, id, userId]);
+    const data = await queryOne<any>(`SELECT id, name, description, value, due_day, type, status, category_id, created_at, updated_at FROM recurrences WHERE id = ?`, [id]);
+    return c.json(data ? { ...data, value: Number(data.value) } : null);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.delete("/recurrences/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  try {
+    await execute(`DELETE FROM recurrences WHERE id = ? AND user_id = ?`, [id, userId]);
+    return c.body(null, 204);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
+api.post("/recurrences/:id/generate", async (c) => {
+  const id = c.req.param("id");
+  const userId = c.get("userId");
+  const body = z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) }).safeParse(await c.req.json());
+  if (!body.success) return c.json({ error: "month YYYY-MM required" }, 400);
+  try {
+    const rec = await queryOne<any>(
+      `SELECT * FROM recurrences WHERE id = ? AND user_id = ?`, [id, userId]
+    );
+    if (!rec) return c.json({ error: "not found" }, 404);
+    const [year, mon] = body.data.month.split("-").map(Number);
+    const lastDay = new Date(year, mon, 0).getDate();
+    const day = Math.min(rec.due_day, lastDay);
+    const due_date = `${body.data.month}-${String(day).padStart(2, "0")}`;
+    const newId = randomUUID();
+    await execute(
+      `INSERT INTO transactions (id, user_id, category_id, description, amount, type, status, due_date, paid_date, notes)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, NULL, NULL)`,
+      [newId, userId, rec.category_id, rec.name, rec.value, rec.type, due_date]
+    );
+    const tx = await queryOne<any>(`SELECT * FROM transactions WHERE id = ?`, [newId]);
+    return c.json(tx ? { ...tx, amount: Number(tx.amount) } : null, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 400);
+  }
+});
+
 app.get("/health", (c) => c.json({ ok: true }));
 
 const origins =
