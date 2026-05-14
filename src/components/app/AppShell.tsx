@@ -1,6 +1,8 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { Moon, Sun } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 
 const NAV = [
   { to: "/dashboard", label: "Painel" },
@@ -12,6 +14,7 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const { isDark, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -46,6 +49,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
               {user?.email}
             </span>
+            <button
+              onClick={toggleTheme}
+              aria-label={isDark ? "Ativar tema claro" : "Ativar tema escuro"}
+              className="text-muted-foreground hover:text-foreground transition"
+            >
+              {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
             <button
               onClick={() => signOut()}
               className="text-xs font-mono uppercase tracking-widest text-muted-foreground hover:text-foreground transition"

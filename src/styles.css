@@ -2,6 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -67,6 +69,35 @@
   --negative-foreground: oklch(0.99 0 0);
   --warning: oklch(0.72 0.17 60);
   --warning-foreground: oklch(0.18 0.02 260);
+}
+
+.dark {
+  --background: oklch(0.13 0.01 260);
+  --foreground: oklch(0.93 0.005 240);
+  --surface: oklch(0.17 0.01 260);
+  --card: oklch(0.17 0.01 260);
+  --card-foreground: oklch(0.93 0.005 240);
+  --popover: oklch(0.17 0.01 260);
+  --popover-foreground: oklch(0.93 0.005 240);
+  --primary: oklch(0.65 0.2 265);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.22 0.01 260);
+  --secondary-foreground: oklch(0.88 0.005 240);
+  --muted: oklch(0.22 0.01 260);
+  --muted-foreground: oklch(0.6 0.01 260);
+  --accent: oklch(0.65 0.2 265);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.27 0.01 260);
+  --input: oklch(0.27 0.01 260);
+  --ring: oklch(0.65 0.2 265);
+  --positive: oklch(0.65 0.15 155);
+  --positive-foreground: oklch(0.99 0 0);
+  --negative: oklch(0.65 0.22 25);
+  --negative-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.75 0.17 60);
+  --warning-foreground: oklch(0.13 0.01 260);
 }
 
 @font-face {
