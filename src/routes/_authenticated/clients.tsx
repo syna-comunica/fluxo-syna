@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchClients, insertClient, updateClient, deleteClient, type Client } from "@/lib/finance-queries";
 import { useAuth } from "@/hooks/use-auth";
+import { hasFinanceApi } from "@/lib/finance-remote";
 import { formatBRL, formatDate } from "@/lib/format";
 import { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -24,6 +25,20 @@ const EMPTY: Omit<Client, "id"> & { user_id: string } = {
 };
 
 function ClientsPage() {
+  if (!hasFinanceApi()) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+        <div className="size-3 bg-warning mx-auto" />
+        <h2 className="text-xl font-display font-semibold">Backend não configurado</h2>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          A gestão de clientes requer o backend MySQL. Defina a variável{" "}
+          <code className="font-mono text-xs bg-muted px-1 py-0.5">VITE_FINANCE_API_URL</code>{" "}
+          no painel da Vercel apontando para a URL do seu app.
+        </p>
+      </div>
+    );
+  }
+
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: clients = [], isLoading } = useQuery({ queryKey: ["clients"], queryFn: fetchClients });

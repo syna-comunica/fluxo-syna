@@ -1,12 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
-/** Base URL do servidor em `backend/` (sem barra final).
- *  Se vazio, usa URL relativa (/api/...) — funciona no Vercel onde frontend e API ficam no mesmo domínio.
- *  Se definido como "supabase", usa Supabase direto no browser (modo legado). */
+/** Base URL do servidor em `backend/` (sem barra final). Se vazio, o app usa Supabase direto no browser. */
 export const FINANCE_API_URL = (import.meta.env.VITE_FINANCE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 export function hasFinanceApi(): boolean {
-  return FINANCE_API_URL !== "supabase";
+  return FINANCE_API_URL.length > 0;
 }
 
 const FINANCE_TOKEN_KEY = "finance_api_token";
