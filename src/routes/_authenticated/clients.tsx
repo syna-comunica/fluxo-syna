@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { formatBRL, formatDate } from "@/lib/format";
 import { useMemo, useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   component: ClientsPage,
@@ -34,15 +35,18 @@ function ClientsPage() {
 
   const insertMut = useMutation({
     mutationFn: insertClient,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); closeModal(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); closeModal(); toast.success("Cliente criado com sucesso"); },
+    onError: (e: Error) => toast.error(e.message),
   });
   const updateMut = useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: Partial<Omit<Client, "id">> }) => updateClient(id, patch),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); closeModal(); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); closeModal(); toast.success("Cliente atualizado"); },
+    onError: (e: Error) => toast.error(e.message),
   });
   const deleteMut = useMutation({
     mutationFn: deleteClient,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); setDeleteId(null); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); setDeleteId(null); toast.success("Cliente excluído"); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const stats = useMemo(() => {
