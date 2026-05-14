@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { fetchTransactions, fetchCategories } from "@/lib/finance-queries";
 import { formatBRL, monthLabel } from "@/lib/format";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dre")({
@@ -26,10 +26,17 @@ function DrePage() {
     else setMonth(m => m + 1);
   }
 
+  const pickerRef = useRef<HTMLInputElement>(null);
+
   const monthStr = `${year}-${String(month).padStart(2, "0")}`;
   const monthStart = `${monthStr}-01`;
   const monthEnd = new Date(year, month, 0).toISOString().slice(0, 10);
   const monthName = monthLabel(new Date(year, month - 1, 1));
+
+  function onPickerChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const [y, m] = e.target.value.split("-").map(Number);
+    if (y && m) { setYear(y); setMonth(m); }
+  }
 
   const dre = useMemo(() => {
     const inMonth = transactions.filter((t) => t.due_date >= monthStart && t.due_date <= monthEnd);
@@ -88,7 +95,23 @@ function DrePage() {
           <button onClick={prevMonth} className="text-muted-foreground hover:text-foreground transition p-1">
             <ChevronLeft size={16} />
           </button>
-          <span className="font-mono text-sm uppercase tracking-widest w-40 text-center">{monthName}</span>
+          <div className="relative">
+            <button
+              onClick={() => pickerRef.current?.showPicker()}
+              className="font-mono text-sm uppercase tracking-widest w-44 text-center hover:text-accent transition"
+              title="Clique para selecionar o mês"
+            >
+              {monthName}
+            </button>
+            <input
+              ref={pickerRef}
+              type="month"
+              value={monthStr}
+              onChange={onPickerChange}
+              className="absolute inset-0 opacity-0 w-full cursor-pointer"
+              tabIndex={-1}
+            />
+          </div>
           <button onClick={nextMonth} className="text-muted-foreground hover:text-foreground transition p-1">
             <ChevronRight size={16} />
           </button>
