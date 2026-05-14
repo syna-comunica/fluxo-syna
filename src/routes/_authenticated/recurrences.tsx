@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { hasFinanceApi } from "@/lib/finance-remote";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchRecurrences, insertRecurrence, updateRecurrence, deleteRecurrence, generateFromRecurrence,
@@ -27,20 +26,6 @@ const EMPTY = {
 };
 
 function RecurrencesPage() {
-  if (!hasFinanceApi()) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
-        <div className="size-3 bg-warning mx-auto" />
-        <h2 className="text-xl font-display font-semibold">Backend não configurado</h2>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          A gestão de recorrências requer o backend MySQL. Defina a variável{" "}
-          <code className="font-mono text-xs bg-muted px-1 py-0.5">VITE_FINANCE_API_URL</code>{" "}
-          no painel da Vercel apontando para a URL do seu app.
-        </p>
-      </div>
-    );
-  }
-
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: recurrences = [], isLoading } = useQuery({ queryKey: ["recurrences"], queryFn: fetchRecurrences });

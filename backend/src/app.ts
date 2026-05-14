@@ -138,18 +138,48 @@ api.use("*", async (c, next) => {
     return c.json({ error: "Missing Authorization: Bearer <token>" }, 401);
   }
 
+  // 1. Try our own MySQL JWT first
   const decoded = verifyToken(token);
-  if (!decoded) {
-    return c.json({ error: "Invalid or expired token" }, 401);
+  if (decoded) {
+    const user = await getUserById(decoded.userId);
+    if (user) {
+      c.set("userId", user.id);
+      return next();
+    }
   }
 
-  const user = await getUserById(decoded.userId);
-  if (!user) {
-    return c.json({ error: "User not found or inactive" }, 401);
+  // 2. Fallback: try Supabase JWT (for users authenticated via Supabase)
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (supabaseUrl && supabaseAnonKey) {
+    try {
+      const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { Authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      });
+      if (res.ok) {
+        const supaUser = await (res.json() as Promise<{ id: string; email: string }>);
+        let user = await queryOne<any>(
+          `SELECT id, is_active FROM users WHERE email = ?`,
+          [supaUser.email]
+        );
+        if (!user) {
+          const newId = randomUUID();
+          await execute(
+            `INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)`,
+            [newId, supaUser.email, "$supabase-sso$"]
+          );
+          user = { id: newId, is_active: 1 };
+        }
+        if (!user.is_active) return c.json({ error: "User inactive" }, 401);
+        c.set("userId", user.id);
+        return next();
+      }
+    } catch {
+      // Supabase verification failed, fall through to 401
+    }
   }
 
-  c.set("userId", user.id);
-  return next();
+  return c.json({ error: "Invalid or expired token" }, 401);
 });
 
 api.get("/auth/me", async (c) => {
