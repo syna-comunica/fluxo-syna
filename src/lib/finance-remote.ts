@@ -7,7 +7,26 @@ export function hasFinanceApi(): boolean {
   return FINANCE_API_URL.length > 0;
 }
 
+const FINANCE_TOKEN_KEY = "finance_api_token";
+
+export function getFinanceToken(): string | null {
+  return localStorage.getItem(FINANCE_TOKEN_KEY);
+}
+
+export function setFinanceToken(token: string): void {
+  localStorage.setItem(FINANCE_TOKEN_KEY, token);
+}
+
+export function clearFinanceToken(): void {
+  localStorage.removeItem(FINANCE_TOKEN_KEY);
+}
+
 async function authHeaders(): Promise<HeadersInit> {
+  if (hasFinanceApi()) {
+    const token = getFinanceToken();
+    if (!token) throw new Error("Sessão expirada ou ausente. Faça login novamente.");
+    return { Authorization: `Bearer ${token}` };
+  }
   const {
     data: { session },
   } = await supabase.auth.getSession();

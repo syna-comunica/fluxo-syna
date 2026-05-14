@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomUUID } from "crypto";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -199,17 +200,17 @@ api.post("/categories", async (c) => {
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const userId = c.get("userId");
   try {
-    const result = await execute(
-      `INSERT INTO categories (id, user_id, name, type, color) 
-       VALUES (UUID(), ?, ?, ?, ?)`,
-      [userId, parsed.data.name, parsed.data.type, parsed.data.color]
+    const newId = randomUUID();
+    await execute(
+      `INSERT INTO categories (id, user_id, name, type, color) VALUES (?, ?, ?, ?, ?)`,
+      [newId, userId, parsed.data.name, parsed.data.type, parsed.data.color]
     );
 
     const data = await queryOne<any>(
-      `SELECT id, user_id, name, type, color, created_at FROM categories WHERE id = (SELECT LAST_INSERT_ID())`,
-      []
+      `SELECT id, user_id, name, type, color, created_at FROM categories WHERE id = ?`,
+      [newId]
     );
-    
+
     return c.json(data, 201);
   } catch (error: any) {
     return c.json({ error: error.message }, 400);
@@ -218,8 +219,9 @@ api.post("/categories", async (c) => {
 
 api.delete("/categories/:id", async (c) => {
   const id = c.req.param("id");
+  const userId = c.get("userId");
   try {
-    await execute(`DELETE FROM categories WHERE id = ?`, [id]);
+    await execute(`DELETE FROM categories WHERE id = ? AND user_id = ?`, [id, userId]);
     return c.body(null, 204);
   } catch (error: any) {
     return c.json({ error: error.message }, 400);
@@ -261,10 +263,12 @@ api.post("/transactions", async (c) => {
         : null;
 
   try {
+    const newId = randomUUID();
     await execute(
-      `INSERT INTO transactions (id, user_id, category_id, description, amount, type, status, due_date, paid_date, notes) 
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO transactions (id, user_id, category_id, description, amount, type, status, due_date, paid_date, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        newId,
         userId,
         body.category_id ?? null,
         body.description,
@@ -278,8 +282,9 @@ api.post("/transactions", async (c) => {
     );
 
     const data = await queryOne<any>(
-      `SELECT id, user_id, category_id, description, amount, type, status, due_date, paid_date, notes, created_at, updated_at 
-       FROM transactions ORDER BY created_at DESC LIMIT 1`
+      `SELECT id, user_id, category_id, description, amount, type, status, due_date, paid_date, notes, created_at, updated_at
+       FROM transactions WHERE id = ?`,
+      [newId]
     );
 
     return c.json(
@@ -295,6 +300,7 @@ api.post("/transactions", async (c) => {
 
 api.patch("/transactions/:id", async (c) => {
   const id = c.req.param("id");
+  const userId = c.get("userId");
   const parsed = transactionPatch.safeParse(await c.req.json());
   if (!parsed.success) return c.json({ error: parsed.error.flatten() }, 400);
   const patch = { ...parsed.data };
@@ -304,9 +310,10 @@ api.patch("/transactions/:id", async (c) => {
   const values = Object.values(patch);
 
   try {
-    await execute(`UPDATE transactions SET ${setClauses} WHERE id = ?`, [
+    await execute(`UPDATE transactions SET ${setClauses} WHERE id = ? AND user_id = ?`, [
       ...values,
       id,
+      userId,
     ]);
 
     const data = await queryOne<any>(
@@ -327,8 +334,9 @@ api.patch("/transactions/:id", async (c) => {
 
 api.delete("/transactions/:id", async (c) => {
   const id = c.req.param("id");
+  const userId = c.get("userId");
   try {
-    await execute(`DELETE FROM transactions WHERE id = ?`, [id]);
+    await execute(`DELETE FROM transactions WHERE id = ? AND user_id = ?`, [id, userId]);
     return c.body(null, 204);
   } catch (error: any) {
     return c.json({ error: error.message }, 400);
