@@ -3,10 +3,22 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
   "installCommand": "npm install",
-  "rewrites": [
+  "functions": {
+    "api/[...route].ts": {
+      "maxDuration": 30
+    }
+  },
+  "routes": [
     {
-      "source": "/((?!api|_build|_shell|assets|favicon).*)",
-      "destination": "/_shell.html"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/_shell.html"
     }
   ]
 }
