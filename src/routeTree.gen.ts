@@ -13,11 +13,11 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTransactionsRouteImport } from './routes/_authenticated/transactions'
-import { Route as AuthenticatedProjectionRouteImport } from './routes/_authenticated/projection'
 import { Route as AuthenticatedRecurrencesRouteImport } from './routes/_authenticated/recurrences'
+import { Route as AuthenticatedProjectionRouteImport } from './routes/_authenticated/projection'
 import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated/dre'
-import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedClientsRouteImport } from './routes/_authenticated/clients'
 import { Route as AuthenticatedCategoriesRouteImport } from './routes/_authenticated/categories'
 import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated/budgets'
 
@@ -41,14 +41,15 @@ const AuthenticatedTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRecurrencesRoute =
+  AuthenticatedRecurrencesRouteImport.update({
+    id: '/recurrences',
+    path: '/recurrences',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProjectionRoute = AuthenticatedProjectionRouteImport.update({
   id: '/projection',
   path: '/projection',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedRecurrencesRoute = AuthenticatedRecurrencesRouteImport.update({
-  id: '/recurrences',
-  path: '/recurrences',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
@@ -56,14 +57,14 @@ const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
   path: '/dre',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedClientsRoute = AuthenticatedClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCategoriesRoute = AuthenticatedCategoriesRouteImport.update({
@@ -191,18 +192,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/projection': {
-      id: '/_authenticated/projection'
-      path: '/projection'
-      fullPath: '/projection'
-      preLoaderRoute: typeof AuthenticatedProjectionRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/recurrences': {
       id: '/_authenticated/recurrences'
       path: '/recurrences'
       fullPath: '/recurrences'
       preLoaderRoute: typeof AuthenticatedRecurrencesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/projection': {
+      id: '/_authenticated/projection'
+      path: '/projection'
+      fullPath: '/projection'
+      preLoaderRoute: typeof AuthenticatedProjectionRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dre': {
@@ -212,18 +213,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDreRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/clients': {
-      id: '/_authenticated/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof AuthenticatedClientsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clients': {
+      id: '/_authenticated/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedClientsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/categories': {
