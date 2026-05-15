@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
-import { closePool } from "./db.ts";
-import app from "./app.ts";
+import { closePool } from "./db";
+import app from "./app";
 
 const port = Number(process.env.PORT) || 8787;
 

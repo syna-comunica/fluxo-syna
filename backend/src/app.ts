@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { z } from "zod";
-import { query, queryOne, execute } from "./db.ts";
+import { query, queryOne, execute } from "./db";
 import { randomUUID } from "crypto";
 import {
   extractToken,
@@ -10,7 +10,7 @@ import {
   generateToken,
   loginUser,
   registerUser,
-} from "./auth.ts";
+} from "./auth";
 
 type Variables = {
   userId: string;

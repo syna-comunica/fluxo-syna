@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
-import { query, execute } from "./db.ts";
+import { query, execute } from "./db";
 
 export interface AuthUser {
   id: string;
