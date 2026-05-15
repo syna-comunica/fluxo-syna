@@ -75,7 +75,8 @@ authRouter.post("/login", async (c) => {
       .safeParse(body);
 
     if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400);
+      const msgs = Object.values(parsed.error.flatten().fieldErrors).flat();
+      return c.json({ error: msgs[0] ?? "Dados inválidos" }, 400);
     }
 
     const result = await loginUser(parsed.data.email, parsed.data.password);
@@ -101,7 +102,8 @@ authRouter.post("/register", async (c) => {
       .safeParse(body);
 
     if (!parsed.success) {
-      return c.json({ error: parsed.error.flatten() }, 400);
+      const msgs = Object.values(parsed.error.flatten().fieldErrors).flat();
+      return c.json({ error: msgs[0] ?? "Dados inválidos" }, 400);
     }
 
     const result = await registerUser(
@@ -549,7 +551,14 @@ api.post("/recurrences/:id/generate", async (c) => {
   }
 });
 
-app.get("/health", (c) => c.json({ ok: true }));
+app.get("/health", async (c) => {
+  try {
+    await query("SELECT 1");
+    return c.json({ ok: true, db: "connected" });
+  } catch (err: any) {
+    return c.json({ ok: false, db: "error", error: err.message }, 500);
+  }
+});
 
 const origins =
   process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()).filter(Boolean) ??

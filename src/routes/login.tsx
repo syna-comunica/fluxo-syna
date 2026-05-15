@@ -106,7 +106,7 @@ function LoginPage() {
             <input
               required
               type="password"
-              minLength={6}
+              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input-studio"

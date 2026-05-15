@@ -12,10 +12,10 @@ export async function getPool(): Promise<mysql.Pool> {
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "fluxo_finance",
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: 5,
     queueLimit: 0,
-    enableKeepAlive: true,
-    keepAliveInitialDelayMs: 0,
+    connectTimeout: 8000,
+    enableKeepAlive: false,
   });
 
   return pool;
