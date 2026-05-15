@@ -10,10 +10,8 @@
   },
   "routes": [
     {
-   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/[...route]"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
       "handle": "filesystem"
