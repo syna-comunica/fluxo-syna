@@ -551,21 +551,14 @@ api.post("/recurrences/:id/generate", async (c) => {
   }
 });
 
-app.get("/health", async (c) => {
-  try {
-    await query("SELECT 1");
-    return c.json({ ok: true, db: "connected" });
-  } catch (err: any) {
-    return c.json({ ok: false, db: "error", error: err.message }, 500);
-  }
-});
+app.get("/health", (c) => c.json({ ok: true }));
 
 const origins =
   process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()).filter(Boolean) ??
   ["*"];
 
 app.use(
-  "/api/*",
+  "*",
   cors({
     origin: origins.includes("*") ? "*" : origins,
     allowHeaders: ["Authorization", "Content-Type"],
@@ -574,7 +567,7 @@ app.use(
   })
 );
 
-app.route("/api/auth", authRouter);
-app.route("/api", api);
+app.route("/auth", authRouter);
+app.route("/", api);
 
 export default app;
