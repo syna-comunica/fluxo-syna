@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/((?!_build|_shell|assets|favicon).*)",
+      "source": "/((?!api|_build|_shell|assets|favicon).*)",
       "destination": "/_shell.html"
     }
   ]
