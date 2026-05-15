@@ -33,11 +33,18 @@ function LoginPage() {
       });
 
       if (!res.ok) {
-        const j = await res.json().catch(() => ({})) as { error?: string };
-        throw new Error(j.error ?? "Erro ao autenticar");
+        const text = await res.text().catch(() => "");
+        let msg = "Erro ao autenticar";
+        try {
+          const j = JSON.parse(text) as { error?: unknown };
+          if (typeof j.error === "string") msg = j.error;
+          else if (j.error) msg = JSON.stringify(j.error);
+        } catch { if (text && text.length < 200) msg = text; }
+        throw new Error(msg);
       }
 
-      const data = await res.json() as { token: string };
+      const text = await res.text();
+      const data = JSON.parse(text) as { token: string };
       setFinanceToken(data.token);
       if (mode === "signup") toast.success("Conta criada. Bem-vindo!");
 
