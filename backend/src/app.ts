@@ -551,14 +551,14 @@ api.post("/recurrences/:id/generate", async (c) => {
   }
 });
 
-app.get("/health", (c) => c.json({ ok: true }));
+app.get("/api/health", (c) => c.json({ ok: true }));
 
 const origins =
   process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()).filter(Boolean) ??
   ["*"];
 
 app.use(
-  "*",
+  "/api/*",
   cors({
     origin: origins.includes("*") ? "*" : origins,
     allowHeaders: ["Authorization", "Content-Type"],
@@ -567,7 +567,7 @@ app.use(
   })
 );
 
-app.route("/auth", authRouter);
-app.route("/", api);
+app.route("/api/auth", authRouter);
+app.route("/api", api);
 
 export default app;
