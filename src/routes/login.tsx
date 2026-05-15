@@ -1,8 +1,7 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { hasFinanceApi, FINANCE_API_URL, setFinanceToken } from "@/lib/finance-remote";
+import { FINANCE_API_URL, setFinanceToken } from "@/lib/finance-remote";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -11,7 +10,6 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const { session, loading } = useAuth();
-  const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,42 +22,29 @@ function LoginPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      if (hasFinanceApi()) {
-        const endpoint = mode === "signup" ? "/api/auth/register" : "/api/auth/login";
-        const body: Record<string, string> = { email, password };
-        if (mode === "signup") body.agency_name = agency || "Minha Agência";
-        const res = await fetch(`${FINANCE_API_URL}${endpoint}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({})) as { error?: string };
-          throw new Error(j.error ?? "Erro ao autenticar");
-        }
-        const data = await res.json() as { token: string };
-        setFinanceToken(data.token);
-        if (mode === "signup") toast.success("Conta criada. Bem-vindo!");
-      } else {
-        if (mode === "signup") {
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: window.location.origin,
-              data: { agency_name: agency || "Minha Agência" },
-            },
-          });
-          if (error) throw error;
-          toast.success("Conta criada. Bem-vindo!");
-        } else {
-          const { error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-        }
+      const endpoint = mode === "signup" ? "/api/auth/register" : "/api/auth/login";
+      const body: Record<string, string> = { email, password };
+      if (mode === "signup") body.agency_name = agency || "Minha Agência";
+
+      const res = await fetch(`${FINANCE_API_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(j.error ?? "Erro ao autenticar");
       }
-      navigate({ to: "/dashboard" });
-    } catch (err: any) {
-      toast.error(err.message ?? "Erro ao autenticar");
+
+      const data = await res.json() as { token: string };
+      setFinanceToken(data.token);
+      if (mode === "signup") toast.success("Conta criada. Bem-vindo!");
+
+      // Reload completo para o AuthProvider reler o token do localStorage
+      window.location.href = "/dashboard";
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao autenticar");
     } finally {
       setSubmitting(false);
     }

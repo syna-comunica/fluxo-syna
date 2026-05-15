@@ -1,10 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
-
-/** Base URL do servidor em `backend/` (sem barra final). Se vazio, o app usa Supabase direto no browser. */
-export const FINANCE_API_URL = (import.meta.env.VITE_FINANCE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+/** Base URL do servidor (sem barra final).
+ *  Deixe vazio no Vercel — o frontend e a API ficam no mesmo domínio.
+ *  Em desenvolvimento local defina VITE_FINANCE_API_URL=http://localhost:8787 */
+export const FINANCE_API_URL =
+  (import.meta.env.VITE_FINANCE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 export function hasFinanceApi(): boolean {
-  return FINANCE_API_URL.length > 0;
+  return true; // Único banco: MySQL. Sempre usa o backend.
 }
 
 const FINANCE_TOKEN_KEY = "finance_api_token";
@@ -22,20 +23,9 @@ export function clearFinanceToken(): void {
 }
 
 async function authHeaders(): Promise<HeadersInit> {
-  if (hasFinanceApi()) {
-    const token = getFinanceToken();
-    if (!token) throw new Error("Sessão expirada ou ausente. Faça login novamente.");
-    return { Authorization: `Bearer ${token}` };
-  }
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error("Sessão expirada ou ausente. Faça login novamente.");
-  }
-  return {
-    Authorization: `Bearer ${session.access_token}`,
-  };
+  const token = getFinanceToken();
+  if (!token) throw new Error("Sessão expirada ou ausente. Faça login novamente.");
+  return { Authorization: `Bearer ${token}` };
 }
 
 async function authHeadersJson(): Promise<HeadersInit> {
@@ -45,11 +35,17 @@ async function authHeadersJson(): Promise<HeadersInit> {
 
 async function parseError(res: Response): Promise<string> {
   try {
-    const j = (await res.json()) as { error?: unknown };
-    if (typeof j.error === "string") return j.error;
-    return JSON.stringify(j.error ?? j);
+    const text = await res.text();
+    if (!text) return `HTTP ${res.status}`;
+    try {
+      const j = JSON.parse(text) as { error?: unknown };
+      if (typeof j.error === "string") return j.error;
+      return JSON.stringify(j.error ?? j);
+    } catch {
+      return text;
+    }
   } catch {
-    return await res.text();
+    return `HTTP ${res.status}`;
   }
 }
 
